@@ -22,35 +22,27 @@ class SQLRAGService:
         if not self.google_api_key:
             raise ValueError("GEMINI_API_KEY not found in environment variables")
         
-        # Initialize embeddings
-        self.embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-        
         # Setup paths
         self.curdir = os.path.dirname(__file__)
         self.knowledge_file = os.path.join(self.curdir, 'sql_knowledge_base.txt')
         self.persist_dir = os.path.join(self.curdir, 'sql_chroma_db')
         
-        # Initialize or load vector database
-        self.db = self._initialize_vector_db()
-        
-        # Initialize LLM
-        self.llm = ChatGoogleGenerativeAI(
-            model="gemini-2.0-flash", 
-            api_key=self.google_api_key, 
-            temperature=0.1
-        )
+        # Lazy initialization - only initialize when needed
+        self.embedding = None
+        self.db = None
+        self.llm = None
     
     def _initialize_vector_db(self):
         """Initialize or load the vector database with SQL knowledge"""
         if not os.path.exists(self.persist_dir):
-            print(f"Creating SQL knowledge database at {self.persist_dir}")
+            print(f"Creating SQL knowledge database at {self.persist_dir}", file=sys.stderr)  # Changed
             os.makedirs(self.persist_dir, exist_ok=True)
             
             # Load SQL knowledge base
             loader = TextLoader(self.knowledge_file, encoding='utf8')
             documents = loader.load()
             
-            print(f"Loaded {len(documents)} documents from knowledge base")
+            print(f"Loaded {len(documents)} documents from knowledge base", file=sys.stderr)  # Changed
             
             # Split documents into chunks
             text_splitter = RecursiveCharacterTextSplitter(
@@ -60,7 +52,7 @@ class SQLRAGService:
             )
             chunks = text_splitter.split_documents(documents)
             
-            print(f"Created {len(chunks)} chunks from knowledge base")
+            print(f"Created {len(chunks)} chunks from knowledge base", file=sys.stderr)  # Changed
             
             # Create vector database
             db = Chroma.from_documents(
@@ -78,10 +70,32 @@ class SQLRAGService:
                 persist_directory=self.persist_dir, 
                 embedding_function=self.embedding
             )
+
+    def _ensure_initialized(self):
+        """Ensure all components are initialized (lazy loading)"""
+        if self.embedding is None:
+            print("Initializing embeddings...", file=sys.stderr)  # Changed
+            self.embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+        
+        if self.db is None:
+            print("Initializing vector database...", file=sys.stderr)  # Changed
+            self.db = self._initialize_vector_db()
+        
+        if self.llm is None:
+            print("Initializing LLM...", file=sys.stderr)  # Changed
+            self.llm = ChatGoogleGenerativeAI(
+                model="gemini-2.0-flash", 
+                api_key=self.google_api_key, 
+                temperature=0.1
+            )
+
     
     def generate_sql_with_rag(self, natural_language_query, schema):
         """Generate SQL query using RAG with context from knowledge base"""
         try:
+            # Ensure all components are initialized
+            self._ensure_initialized()
+            
             # Create retriever
             retriever = self.db.as_retriever(
                 search_type="similarity",

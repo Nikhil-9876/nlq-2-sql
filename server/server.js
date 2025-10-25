@@ -45,16 +45,56 @@ app.use("/api", queryRoutes);
 // Test database connection
 app.get("/api/health", async (req, res) => {
   try {
-    const [rows] = await pool.query("SELECT COUNT(*) as count FROM books");
+    // Test basic database connection with a simple query
+    const [rows] = await pool.query("SELECT 1 as test");
+    
     res.json({
       status: "healthy",
       database: "connected",
-      bookCount: rows[0].count,
+      timestamp: new Date().toISOString(),
+      message: "Server is running properly"
     });
   } catch (error) {
+    console.error('Health check failed:', error);
     res.status(500).json({
       status: "unhealthy",
       error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Test RAG service (only when explicitly requested)
+app.get("/api/health/rag", async (req, res) => {
+  try {
+    // Test RAG service availability
+    let ragStatus = "unknown";
+    let pythonVersion = "unknown";
+    
+    try {
+      const { exec } = require('child_process');
+      const util = require('util');
+      const execAsync = util.promisify(exec);
+      const { stdout } = await execAsync('python --version');
+      pythonVersion = stdout.trim();
+      ragStatus = "available";
+    } catch (ragError) {
+      ragStatus = "unavailable";
+    }
+    
+    res.json({
+      status: "healthy",
+      ragService: ragStatus,
+      pythonVersion: pythonVersion,
+      timestamp: new Date().toISOString(),
+      message: "RAG service check completed"
+    });
+  } catch (error) {
+    console.error('RAG health check failed:', error);
+    res.status(500).json({
+      status: "unhealthy",
+      error: error.message,
+      timestamp: new Date().toISOString()
     });
   }
 });

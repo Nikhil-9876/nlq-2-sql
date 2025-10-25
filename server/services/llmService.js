@@ -1,12 +1,18 @@
 const RAGService = require('./ragService');
 require('dotenv').config();
 
-// Initialize RAG service
-const ragService = new RAGService();
+// Lazy initialization - only create RAG service when needed
+let ragService = null;
 
 async function generateSQL(naturalLanguageQuery, schema) {
   try {
     console.log('Using RAG service for SQL generation...');
+    
+    // Initialize RAG service only when needed (lazy loading)
+    if (!ragService) {
+      console.log('Initializing RAG service...');
+      ragService = new RAGService();
+    }
     
     // Use RAG service to generate SQL with context from knowledge base
     const sqlQuery = await ragService.generateSQLWithRAGDirect(naturalLanguageQuery, schema);
