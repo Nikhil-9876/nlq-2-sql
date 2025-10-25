@@ -1,0 +1,138 @@
+SQL Query Generation Knowledge Base
+
+=== BASIC SQL PATTERNS ===
+
+SELECT Queries:
+- SELECT * FROM table_name WHERE condition;
+- SELECT column1, column2 FROM table_name WHERE column1 = 'value';
+- SELECT COUNT(*) FROM table_name;
+- SELECT column1, COUNT(*) FROM table_name GROUP BY column1;
+- SELECT column1, AVG(column2) FROM table_name GROUP BY column1;
+
+JOIN Operations:
+- INNER JOIN: SELECT * FROM table1 INNER JOIN table2 ON table1.id = table2.table1_id;
+- LEFT JOIN: SELECT * FROM table1 LEFT JOIN table2 ON table1.id = table2.table1_id;
+- RIGHT JOIN: SELECT * FROM table1 RIGHT JOIN table2 ON table1.id = table2.table1_id;
+
+Aggregate Functions:
+- COUNT(): Count number of rows
+- SUM(): Sum of numeric values
+- AVG(): Average of numeric values
+- MIN(): Minimum value
+- MAX(): Maximum value
+- GROUP BY: Group results by column values
+
+WHERE Conditions:
+- WHERE column = 'value'
+- WHERE column > 100
+- WHERE column BETWEEN 10 AND 20
+- WHERE column IN ('value1', 'value2')
+- WHERE column LIKE '%pattern%'
+- WHERE column IS NULL
+- WHERE column IS NOT NULL
+
+ORDER BY:
+- ORDER BY column ASC (ascending)
+- ORDER BY column DESC (descending)
+- ORDER BY column1, column2
+
+=== COMMON QUERY PATTERNS ===
+
+Find all records:
+- "Show me all users" → SELECT * FROM users;
+- "List all products" → SELECT * FROM products;
+
+Count records:
+- "How many users are there?" → SELECT COUNT(*) FROM users;
+- "Count products in category" → SELECT COUNT(*) FROM products WHERE category = 'electronics';
+
+Find specific records:
+- "Find user by email" → SELECT * FROM users WHERE email = 'user@example.com';
+- "Get products under $100" → SELECT * FROM products WHERE price < 100;
+
+Search with LIKE:
+- "Find users with gmail" → SELECT * FROM users WHERE email LIKE '%gmail.com';
+- "Search products by name" → SELECT * FROM products WHERE name LIKE '%search_term%';
+
+Group and aggregate:
+- "Count users by country" → SELECT country, COUNT(*) FROM users GROUP BY country;
+- "Average price by category" → SELECT category, AVG(price) FROM products GROUP BY category;
+
+Join tables:
+- "Users with their orders" → SELECT u.*, o.* FROM users u INNER JOIN orders o ON u.id = o.user_id;
+- "Products with categories" → SELECT p.*, c.name FROM products p INNER JOIN categories c ON p.category_id = c.id;
+
+Sort results:
+- "Users ordered by name" → SELECT * FROM users ORDER BY name ASC;
+- "Most expensive products" → SELECT * FROM products ORDER BY price DESC;
+
+Limit results:
+- "Top 10 users" → SELECT * FROM users ORDER BY id LIMIT 10;
+- "First 5 products" → SELECT * FROM products LIMIT 5;
+
+=== DATABASE SCHEMA PATTERNS ===
+
+Common table patterns:
+- users: id, name, email, created_at, updated_at
+- products: id, name, price, category_id, description, created_at
+- orders: id, user_id, total_amount, status, created_at
+- categories: id, name, description
+- order_items: id, order_id, product_id, quantity, price
+
+Common column types:
+- id: INT PRIMARY KEY AUTO_INCREMENT
+- name: VARCHAR(255)
+- email: VARCHAR(255) UNIQUE
+- price: DECIMAL(10,2)
+- created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+- updated_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+=== SQL BEST PRACTICES ===
+
+Security:
+- Always use parameterized queries to prevent SQL injection
+- Validate input before using in queries
+- Use appropriate WHERE clauses to limit data access
+
+Performance:
+- Use indexes on frequently queried columns
+- Limit results with LIMIT when appropriate
+- Use specific column names instead of SELECT *
+- Use appropriate JOIN types
+
+Query Structure:
+- Start with SELECT clause
+- Add FROM clause with table name
+- Add WHERE clause for filtering
+- Add GROUP BY for aggregation
+- Add HAVING for group filtering
+- Add ORDER BY for sorting
+- Add LIMIT for result limiting
+
+=== COMMON MISTAKES TO AVOID ===
+
+- Don't use SELECT * in production queries
+- Always include WHERE clauses when possible
+- Use proper JOIN syntax
+- Handle NULL values appropriately
+- Use appropriate data types
+- Avoid N+1 query problems
+
+=== NATURAL LANGUAGE TO SQL MAPPINGS ===
+
+"Show me" → SELECT
+"Find" → SELECT with WHERE
+"How many" → SELECT COUNT(*)
+"List all" → SELECT * FROM
+"Get" → SELECT with specific columns
+"Count" → SELECT COUNT(*)
+"Average" → SELECT AVG()
+"Sum" → SELECT SUM()
+"Maximum" → SELECT MAX()
+"Minimum" → SELECT MIN()
+"Group by" → GROUP BY
+"Order by" → ORDER BY
+"Sort by" → ORDER BY
+"Top" → ORDER BY ... LIMIT
+"First" → ORDER BY ... LIMIT 1
+"Last" → ORDER BY ... DESC LIMIT 1

@@ -57,21 +57,68 @@ async function executeNLQuery(naturalLanguageQuery, maxRetries = 2) {
 }
 
 function isValidQuery(sql) {
+  if (!sql || typeof sql !== 'string') {
+    return false;
+  }
+  
   const upperSQL = sql.toUpperCase().trim();
   
   // Only allow SELECT queries
   if (!upperSQL.startsWith('SELECT')) {
+    console.log('Security: Rejected non-SELECT query:', sql);
     return false;
   }
   
-  // Block dangerous keywords
-  const dangerousKeywords = ['DROP', 'DELETE', 'INSERT', 'UPDATE', 'TRUNCATE', 'ALTER', 'CREATE'];
+  // Block dangerous keywords anywhere in the query
+  const dangerousKeywords = [
+    'DROP', 'DELETE', 'INSERT', 'UPDATE', 'TRUNCATE', 'ALTER', 'CREATE',
+    'REPLACE', 'MERGE', 'CALL', 'EXEC', 'EXECUTE', 'GRANT', 'REVOKE',
+    'LOCK', 'UNLOCK', 'LOAD', 'INTO', 'OUTFILE', 'DUMPFILE'
+  ];
+  
   for (const keyword of dangerousKeywords) {
     if (upperSQL.includes(keyword)) {
+      console.log(`Security: Rejected query containing dangerous keyword '${keyword}':`, sql);
       return false;
     }
   }
   
+  // Block semicolons (prevents query chaining)
+  if (upperSQL.includes(';')) {
+    console.log('Security: Rejected query containing semicolon:', sql);
+    return false;
+  }
+  
+  // Block comments that might hide malicious code
+  if (upperSQL.includes('--') || upperSQL.includes('/*') || upperSQL.includes('*/')) {
+    console.log('Security: Rejected query containing comments:', sql);
+    return false;
+  }
+  
+  // Block UNION (prevents data extraction attacks)
+  if (upperSQL.includes('UNION')) {
+    console.log('Security: Rejected query containing UNION:', sql);
+    return false;
+  }
+  
+  // Block subqueries with dangerous operations
+  if (upperSQL.includes('(SELECT') && upperSQL.includes('FROM')) {
+    // Allow subqueries but check for dangerous patterns
+    const subqueryPattern = /\(SELECT[^)]+\)/gi;
+    const subqueries = upperSQL.match(subqueryPattern);
+    if (subqueries) {
+      for (const subquery of subqueries) {
+        for (const keyword of dangerousKeywords) {
+          if (subquery.includes(keyword)) {
+            console.log(`Security: Rejected subquery containing dangerous keyword '${keyword}':`, sql);
+            return false;
+          }
+        }
+      }
+    }
+  }
+  
+  console.log('Security: Query passed validation:', sql);
   return true;
 }
 
